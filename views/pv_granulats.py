@@ -218,15 +218,6 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                 'fi': None, 'la': None, 'mb': None, 'mf': 3.50, 'se': 65.0
             }
         }
-                'nom': 'Sable fin 0/0,630',
-                'classe': '0/0,630',
-                'sieves': [1.26, 0.88, 0.63, 0.5, 0.4, 0.315, 0.25, 0.2, 0.16, 0.125, 0.1, 0.08, 0.063],
-                'refus': [0, 10, 10, 20, 30, 40, 80, 100, 150, 200, 150, 100, 102],
-                'M1': 1000.0, 'M2': 900.0, 'P': 2.0,
-                'passants': [],
-                'fi': None, 'la': None, 'mb': 0.7, 'mf': None, 'se': None
-            }
-        }
 
     for k in st.session_state['data_granulats'].keys():
         if not st.session_state['data_granulats'][k]['passants']:
