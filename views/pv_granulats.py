@@ -34,7 +34,7 @@ def get_tamis_D(df: pd.DataFrame) -> float:
 def update_passants(mat_data):
     """Calcule les passants à partir des masses enregistrées (Méthode NF EN 933-1)"""
     M1 = float(mat_data.get('M1', 1000.0))
-    refus = mat_data.get('refus', [0.0]*len(mat_data['sieves']))
+    refus = [float(r) for r in mat_data.get('refus', [0.0]*len(mat_data['sieves']))]
     
     if M1 > 0:
         pct_refus = [(r / M1) * 100 for r in refus]
@@ -181,7 +181,7 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                 'nom': 'Gravillons GII - 10/20',
                 'classe': '10/20',
                 'sieves': [40, 31.5, 28, 25, 20, 16, 14, 12.5, 10, 8, 6.3, 5, 4, 3.15, 2.5, 2, 1.6, 1.25, 1, 0.8, 0.63, 0.5, 0.4, 0.315, 0.25, 0.2, 0.16, 0.125, 0.1, 0.08, 0.063],
-                'refus': [0, 0, 0, 0, 199.7, 2200.3, 732.7, 308.7, 424, 163.2, 45, 6.9, 2.1, 0.2, 0.1, 0.2, 0.2, 0.1, 0, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1, 0, 0.2, 0.1, 0.1, 0.1, 0.1],
+                'refus': [0.0, 0.0, 0.0, 0.0, 199.7, 2200.3, 732.7, 308.7, 424.0, 163.2, 45.0, 6.9, 2.1, 0.2, 0.1, 0.2, 0.2, 0.1, 0.0, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1, 0.0, 0.2, 0.1, 0.1, 0.1, 0.1],
                 'M1': 4110.5, 'M2': 4095.2, 'P': 1.3,
                 'passants': [], 
                 'fi': 16.0, 'la': 26.0, 'mb': None, 'mf': None, 'se': None
@@ -190,7 +190,7 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                 'nom': 'Gravillons GI - 4/10',
                 'classe': '4/10',
                 'sieves': [20, 16, 14, 12.5, 10, 8, 6.3, 5, 4, 3.15, 2.5, 2, 1.6, 1.25, 1, 0.8, 0.63, 0.5, 0.4, 0.315, 0.25, 0.2, 0.16, 0.125, 0.1, 0.08, 0.063],
-                'refus': [0, 0, 100, 100, 200, 300, 200, 100, 50, 10, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                'refus': [0.0, 0.0, 100.0, 100.0, 200.0, 300.0, 200.0, 100.0, 50.0, 10.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 'M1': 2000.0, 'M2': 1990.0, 'P': 0.0,
                 'passants': [], 
                 'fi': 14.0, 'la': 26.0, 'mb': None, 'mf': None, 'se': None
@@ -199,7 +199,7 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                 'nom': 'Sable grossier 0/4',
                 'classe': '0/4',
                 'sieves': [8, 5.6, 4, 3.15, 2.5, 2, 1.6, 1.25, 1, 0.8, 0.63, 0.5, 0.4, 0.315, 0.25, 0.2, 0.16, 0.125, 0.1, 0.08, 0.063],
-                'refus': [0, 40, 40, 50, 60, 70, 80, 90, 100, 80, 70, 60, 50, 40, 30, 20, 10, 10, 10, 10, 9],
+                'refus': [0.0, 40.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0, 80.0, 70.0, 60.0, 50.0, 40.0, 30.0, 20.0, 10.0, 10.0, 10.0, 10.0, 9.0],
                 'M1': 1000.0, 'M2': 910.0, 'P': 3.0,
                 'passants': [],
                 'fi': None, 'la': None, 'mb': None, 'mf': 3.50, 'se': 65.0
@@ -208,7 +208,7 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                 'nom': 'Sable fin 0/0,630',
                 'classe': '0/0,630',
                 'sieves': [1.26, 0.88, 0.63, 0.5, 0.4, 0.315, 0.25, 0.2, 0.16, 0.125, 0.1, 0.08, 0.063],
-                'refus': [0, 10, 10, 20, 30, 40, 80, 100, 150, 200, 150, 100, 102],
+                'refus': [0.0, 10.0, 10.0, 20.0, 30.0, 40.0, 80.0, 100.0, 150.0, 200.0, 150.0, 100.0, 102.0],
                 'M1': 1000.0, 'M2': 900.0, 'P': 2.0,
                 'passants': [],
                 'fi': None, 'la': None, 'mb': 0.7, 'mf': None, 'se': None
@@ -315,15 +315,17 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
 
             st.markdown("##### ⚖️ Pesées (Procédé : Lavage et tamisage)")
             c_m1, c_m2, c_p = st.columns(3)
-            new_M1 = c_m1.number_input("Masse totale M1 (g)", value=float(mat_data.get('M1', 1000.0)), step=10.0, disabled=not can_edit, key=f"m1_{key}")
-            new_M2 = c_m2.number_input("Masse après lavage M2 (g)", value=float(mat_data.get('M2', 1000.0)), step=10.0, disabled=not can_edit, key=f"m2_{key}")
-            new_P  = c_p.number_input("Matériau au fond P (g)", value=float(mat_data.get('P', 0.0)), step=0.1, disabled=not can_edit, key=f"p_{key}")
+            new_M1 = c_m1.number_input("Masse totale M1 (g)", value=float(mat_data.get('M1', 1000.0)), step=0.1, format="%.1f", disabled=not can_edit, key=f"m1_{key}")
+            new_M2 = c_m2.number_input("Masse après lavage M2 (g)", value=float(mat_data.get('M2', 1000.0)), step=0.1, format="%.1f", disabled=not can_edit, key=f"m2_{key}")
+            new_P  = c_p.number_input("Matériau au fond P (g)", value=float(mat_data.get('P', 0.0)), step=0.1, format="%.1f", disabled=not can_edit, key=f"p_{key}")
             
             st.subheader("Analyse par tamisage (Saisie des refus en g)")
             
+            # Conversion explicite en float64 pour autoriser la saisie des décimales dans st.data_editor
+            refus_list = [float(x) for x in mat_data.get('refus', [0.0]*len(mat_data['sieves']))]
             df_display = pd.DataFrame({
                 "Tamis (mm)": mat_data['sieves'],
-                "Masse de refus Ri (g)": mat_data.get('refus', [0.0]*len(mat_data['sieves']))
+                "Masse de refus Ri (g)": pd.Series(refus_list, dtype='float64')
             })
             
             saved_M1 = float(new_M1) if new_M1 > 0 else 1.0
@@ -338,7 +340,12 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                 key=f"editor_{key}",
                 column_config={
                     "Tamis (mm)": st.column_config.NumberColumn(disabled=True),
-                    "Masse de refus Ri (g)": st.column_config.NumberColumn(disabled=not can_edit, min_value=0.0, format="%.1f"),
+                    "Masse de refus Ri (g)": st.column_config.NumberColumn(
+                        disabled=not can_edit, 
+                        min_value=0.0, 
+                        step=0.1, 
+                        format="%.1f"
+                    ),
                     "% Refus": st.column_config.NumberColumn(disabled=True, format="%.1f %%"),
                     "% Refus Cumulés": st.column_config.NumberColumn(disabled=True, format="%.1f %%"),
                     "% Passants": st.column_config.NumberColumn(disabled=True, format="%.1f %%")
@@ -357,7 +364,7 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                 edited_df["% Passants"] = (100.0 - pct_cum_edit).clip(lower=0.0).round(1)
 
                 mat_data['M1'] = new_M1
-                mat_data['refus'] = edited_df["Masse de refus Ri (g)"].tolist()
+                mat_data['refus'] = [float(x) for x in edited_df["Masse de refus Ri (g)"].tolist()]
                 update_passants(mat_data)
 
             st.markdown("##### 🔍 Vérifications et Validations (NF EN 933-1)")
@@ -385,13 +392,13 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
             
             if key in ["GII", "GI"]:
                 with col_a:
-                    fi_val = st.number_input("Coeff. Aplatissement (FI)", value=float(mat_data.get('fi') or 0.0), step=0.1, disabled=not can_edit, key=f"fi_{key}")
+                    fi_val = st.number_input("Coeff. Aplatissement (FI)", value=float(mat_data.get('fi') or 0.0), step=0.1, format="%.1f", disabled=not can_edit, key=f"fi_{key}")
                 with col_b:
-                    la_val = st.number_input("Los Angeles (LA)", value=float(mat_data.get('la') or 0.0), step=0.1, disabled=not can_edit, key=f"la_{key}")
+                    la_val = st.number_input("Los Angeles (LA)", value=float(mat_data.get('la') or 0.0), step=0.1, format="%.1f", disabled=not can_edit, key=f"la_{key}")
                 mb_val, mf_val, se_val = 0.0, 0.0, 0.0
             else:
                 with col_a:
-                    mb_val = st.number_input("Valeur de Bleu (MB)", value=float(mat_data.get('mb') or 0.0), step=0.1, disabled=not can_edit, key=f"mb_{key}")
+                    mb_val = st.number_input("Valeur de Bleu (MB)", value=float(mat_data.get('mb') or 0.0), step=0.1, format="%.1f", disabled=not can_edit, key=f"mb_{key}")
                 with col_b:
                     mf_val = st.number_input(
                         "Module de Finesse (MF - Calculé Auto)", 
@@ -400,7 +407,7 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                         help="FM = Σ(Refus cumulés sur 4, 2, 1, 0.5, 0.25, 0.125 mm) / 100",
                         key=f"mf_{key}"
                     )
-                    se_val = st.number_input("Équivalent de Sable (SE 10)", value=float(mat_data.get('se') or 0.0), step=0.1, disabled=not can_edit, key=f"se_{key}")
+                    se_val = st.number_input("Équivalent de Sable (SE 10)", value=float(mat_data.get('se') or 0.0), step=0.1, format="%.1f", disabled=not can_edit, key=f"se_{key}")
                 fi_val, la_val = 0.0, 0.0
                 
             st.markdown("---")
@@ -410,7 +417,7 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                     st.session_state['data_granulats'][key]['M1'] = new_M1
                     st.session_state['data_granulats'][key]['M2'] = new_M2
                     st.session_state['data_granulats'][key]['P'] = new_P
-                    st.session_state['data_granulats'][key]['refus'] = edited_df["Masse de refus Ri (g)"].tolist()
+                    st.session_state['data_granulats'][key]['refus'] = [float(x) for x in edited_df["Masse de refus Ri (g)"].tolist()]
                     
                     st.session_state['data_granulats'][key]['fi'] = fi_val if fi_val > 0 else None
                     st.session_state['data_granulats'][key]['la'] = la_val if la_val > 0 else None
@@ -715,7 +722,7 @@ def show(supabase_client=None, can_edit=True, is_admin=False, **kwargs):
                     </tr>
                     <tr class="row-fuseau">
                         <td class="row-designation">Fuseau de production (Min)</td>
-                        <td>100</td><td>100</td><td>94</td><td>11,5</td><td>1.4</td><td>0.6</td><td>4</td><td>23</td>
+                        <td>100</td><td>100</td><td>94</td><td>11.5</td><td>1.4</td><td>0.6</td><td>4</td><td>23</td>
                     </tr>
                     <tr class="row-fuseau">
                         <td class="row-designation">Fuseau de production (Max)</td>
