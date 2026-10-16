@@ -794,7 +794,7 @@ def classer_grave(la, mde, coeff_apl, es, pass_80um):
     return classe
 
 
-def _build_curve_png_bytes(tamis_vals, passant_vals, ech_label="Ech1", fuseau_def=None):
+def _build_curve_png_bytes(tamis_vals, passant_vals, ech_label="Ech1", fuseau_def=None, figsize=(7.0, 6.2)):
     """Reconstruit la courbe granulométrique en mémoire, à partir des données
     propres à CE PV (stockées dans son propre enregistrement), sans jamais
     dépendre d'un fichier temporaire partagé entre sessions/matériaux."""
@@ -806,7 +806,7 @@ def _build_curve_png_bytes(tamis_vals, passant_vals, ech_label="Ech1", fuseau_de
         if plot_df.empty:
             return None
 
-        fig, ax = plt.subplots(figsize=(7.0, 6.2))
+        fig, ax = plt.subplots(figsize=figsize)
         x_indices = np.arange(len(plot_df))
         sieve_values = plot_df["Tamis (mm)"].values
 
@@ -891,6 +891,7 @@ class IdentificationPDF(FPDF):
 def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
     pdf = IdentificationPDF()
     pdf.alias_nb_pages()
+    pdf.set_auto_page_break(False)  # PV strictement sur une seule page
     pdf.add_page()
     
     if not data_dict or not isinstance(data_dict, dict):
@@ -1106,43 +1107,79 @@ def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
 
     pdf.ln(2)
 
-    pdf.set_font("Helvetica", "B", 8)
-    pdf.set_fill_color(220, 230, 242)
-    pdf.cell(190, 5, " COURBE GRANULOMÉTRIQUE", 1, 1, "L", fill=True)
-
+    # ------------------------------------------------------------------
+    # MISE EN PAGE : le PV doit tenir sur UNE SEULE page (signatures incluses).
+    # On calcule d'abord la hauteur des blocs qui suivent la courbe (tableau de
+    # comparaison au fuseau, commentaires, signatures) puis on donne à la courbe
+    # tout l'espace restant (bornée), en resserrant le tableau du fuseau si besoin.
+    # ------------------------------------------------------------------
     tamis_stored = data_dict.get("Courbe Tamis (mm)")
     passant_stored = data_dict.get("Courbe Passant (%)")
+
+    obs_text = data_dict.get('Observation', 'Le matériau peut être utilisé pour un remblai.')
+    # Sécurité : on revérifie toujours la conformité au fuseau à partir des mesures brutes
+    # au moment de générer le PDF (corrige aussi les PV anciens téléchargés depuis l'Historique).
+    if fuseau_def:
+        _fuseau_ok, _fuseau_detail, _ = verifier_fuseau_granulo(fuseau_def, tamis_mesures, passant_mesures)
+        if not _fuseau_ok and "hors fuseau" not in obs_text.lower():
+            obs_text = (
+                "Les résultats d'identification ne sont PAS conformes aux spécifications du marché "
+                f"(hors fuseau granulométrique). {_fuseau_detail}"
+            )
+    obs_full = f" - Observation : {obs_text}"
+
+    OBS_LINE_H = 3.4
+    pdf.set_font("Helvetica", "", 7)
+    obs_lines = pdf.multi_cell(190, OBS_LINE_H, obs_full, 1, "L", split_only=True)
+    comments_h = 4.5 + max(1, len(obs_lines)) * OBS_LINE_H + 1.5
+    signature_h = 4.5 + 8
+    CURVE_HEADER_H = 5
+    PAGE_BOTTOM = 280.0   # le pied de page commence à ~285 mm
+    n_fuseau = len(fuseau_def) if fuseau_def else 0
+
+    row_h = 4.2
+    curve_h = 62.0
+    for candidate in (4.2, 3.8, 3.5, 3.2, 3.0):
+        row_h = candidate
+        fuseau_h = (4.5 + 4.5 + n_fuseau * row_h + 1.5) if fuseau_def else 0.0
+        free = PAGE_BOTTOM - pdf.get_y() - CURVE_HEADER_H - 3 - fuseau_h - 2 - comments_h - signature_h - 1.5
+        curve_h = min(62.0, free)
+        if curve_h >= 48.0:
+            break
+    curve_h = max(curve_h, 25.0)
+
+    pdf.set_font("Helvetica", "B", 8)
+    pdf.set_fill_color(220, 230, 242)
+    pdf.cell(190, CURVE_HEADER_H, " COURBE GRANULOMÉTRIQUE", 1, 1, "L", fill=True)
+
     curve_buf = None
     if tamis_stored and passant_stored and len(tamis_stored) == len(passant_stored):
         curve_buf = _build_curve_png_bytes(
             tamis_stored, passant_stored,
             ech_label=str(data_dict.get('Ref Echantillon', 'Ech 1')),
-            fuseau_def=fuseau_def
+            fuseau_def=fuseau_def,
+            figsize=(190 / 25.4, curve_h / 25.4),
         )
-
-    # Courbe légèrement plus compacte quand le tableau de comparaison au fuseau suit,
-    # pour que l'ensemble du PV reste sur une seule page.
-    curve_h = 4.6 * 10 if fuseau_def else 6.2 * 10
 
     if curve_buf is not None:
         try:
             pdf.image(curve_buf, x=10, y=pdf.get_y() + 1, w=190, h=curve_h)
             pdf.ln(curve_h + 2)
         except Exception:
-            pdf.cell(190, 62, "[Erreur d'insertion de la courbe]", 1, 1, "C")
+            pdf.cell(190, curve_h, "[Erreur d'insertion de la courbe]", 1, 1, "C")
     elif curve_img_path and os.path.exists(curve_img_path):
         try:
             pdf.image(curve_img_path, x=10, y=pdf.get_y() + 1, w=190, h=curve_h)
             pdf.ln(curve_h + 2)
         except Exception:
-            pdf.cell(190, 62, "[Erreur d'insertion de la courbe]", 1, 1, "C")
+            pdf.cell(190, curve_h, "[Erreur d'insertion de la courbe]", 1, 1, "C")
     else:
-        pdf.cell(190, 62, "[Courbe non disponible]", 1, 1, "C")
+        pdf.cell(190, curve_h, "[Courbe non disponible]", 1, 1, "C")
 
-    pdf.ln(2)
+    pdf.ln(1)
 
     # --- Tableau de comparaison au fuseau : un tamis par ligne, avec la valeur mesurée
-    # et l'intervalle min (VSI) - max (VSS) exigé, plus une conclusion de conformité. ---
+    # et l'intervalle min (VSI) - max (VSS) exigé. ---
     if fuseau_def:
         pdf.set_font("Helvetica", "B", 8)
         pdf.set_fill_color(220, 230, 242)
@@ -1155,42 +1192,26 @@ def generate_pdf(header_info, data_dict, type_mat, curve_img_path=None):
         pdf.cell(34, 4.5, "Max (VSS)", 1, 0, "C", fill=True)
         pdf.cell(34, 4.5, "Conforme", 1, 1, "C", fill=True)
 
-        pdf.set_font("Helvetica", "", 7)
+        pdf.set_font("Helvetica", "", 7 if row_h >= 3.8 else 6.5)
         for tamis_f, vsi_f, vss_f in fuseau_def:
             mesure = _mesure_a_tamis(tamis_f, tamis_stored, passant_stored)
             mesure_txt = f"{mesure:.1f}".replace('.', ',') if mesure is not None else "-"
             conforme_txt = "-"
             if mesure is not None:
                 conforme_txt = "OUI" if vsi_f <= mesure <= vss_f else "NON"
-            pdf.cell(38, 4.2, _fmt_tamis_mm(tamis_f), 1, 0, "C")
-            pdf.cell(50, 4.2, mesure_txt, 1, 0, "C")
-            pdf.cell(34, 4.2, _fmt_tamis_mm(vsi_f), 1, 0, "C")
-            pdf.cell(34, 4.2, _fmt_tamis_mm(vss_f), 1, 0, "C")
-            pdf.cell(34, 4.2, conforme_txt, 1, 1, "C")
+            pdf.cell(38, row_h, _fmt_tamis_mm(tamis_f), 1, 0, "C")
+            pdf.cell(50, row_h, mesure_txt, 1, 0, "C")
+            pdf.cell(34, row_h, _fmt_tamis_mm(vsi_f), 1, 0, "C")
+            pdf.cell(34, row_h, _fmt_tamis_mm(vss_f), 1, 0, "C")
+            pdf.cell(34, row_h, conforme_txt, 1, 1, "C")
 
         pdf.ln(1.5)
-
 
     pdf.set_font("Helvetica", "B", 8)
     pdf.set_fill_color(220, 230, 242)
     pdf.cell(190, 4.5, " Commentaires :", 1, 1, "L", fill=True)
-    pdf.set_font("Helvetica", "", 7.5)
-    obs_text = data_dict.get('Observation', 'Le matériau peut être utilisé pour un remblai.')
-
-    # Sécurité : on revérifie toujours la conformité au fuseau à partir des mesures brutes
-    # au moment de générer le PDF, plutôt que de faire confiance au texte "Observation" tel
-    # qu'enregistré. Ceci corrige aussi bien les PV nouvellement créés que le téléchargement,
-    # depuis l'onglet Historique, de PV déjà enregistrés en base (dont l'Observation a pu être
-    # calculée par une version antérieure de l'application, avant la vérification du fuseau).
-    if fuseau_def:
-        _fuseau_ok, _fuseau_detail, _ = verifier_fuseau_granulo(fuseau_def, tamis_mesures, passant_mesures)
-        if not _fuseau_ok and "hors fuseau" not in obs_text.lower():
-            obs_text = (
-                "Les résultats d'identification ne sont PAS conformes aux spécifications du marché "
-                f"(hors fuseau granulométrique). {_fuseau_detail}"
-            )
-
-    pdf.multi_cell(190, 3.8, f" - Observation : {obs_text}\n ", 1, "L")
+    pdf.set_font("Helvetica", "", 7)
+    pdf.multi_cell(190, OBS_LINE_H, obs_full, 1, "L")
     pdf.ln(1.5)
 
     pdf.set_font("Helvetica", "B", 7.5)
